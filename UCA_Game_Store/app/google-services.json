@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "577156952619",
+    "project_id": "uca-game-store",
+    "storage_bucket": "uca-game-store.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:577156952619:android:c44f643071b9fd5c2ab06e",
+        "android_client_info": {
+          "package_name": "com.example.uca_game_store"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbnBJRgZxGG6fP_rEkq8YznoerJuUki1U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
