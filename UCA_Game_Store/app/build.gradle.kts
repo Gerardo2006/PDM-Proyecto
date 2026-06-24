@@ -7,11 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.uca_game_store"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36 // Simplificado de release(36) que parecía problemático
 
     defaultConfig {
         applicationId = "com.example.uca_game_store"
@@ -62,9 +58,11 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     //Firebase
-    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    implementation(platform("com.google.firebase:firebase-bom:34.15.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-storage")
+
 
     //Navegacion
     implementation("androidx.navigation:navigation-compose:${nav_version}")
