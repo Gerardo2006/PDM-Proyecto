@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.example.uca_game_store"
-    compileSdk = 36 // Simplificado de release(36) que parecía problemático
+    compileSdk = 37 // Simplificado de release(36) que parecía problemático
 
     defaultConfig {
         applicationId = "com.example.uca_game_store"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
