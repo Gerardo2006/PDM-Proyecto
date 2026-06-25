@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.uca_game_store" />
+                  <option name="mobileSdkAppId" value="1:577156952619:android:c44f643071b9fd5c2ab06e" />
+                  <option name="projectId" value="uca-game-store" />
+                  <option name="projectNumber" value="577156952619" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

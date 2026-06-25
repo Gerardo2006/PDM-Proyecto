@@ -9,7 +9,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.uca_game_store.ui.viewmodel.AuthViewModel
+import com.example.uca_game_store.ui.viewmodels.AuthViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

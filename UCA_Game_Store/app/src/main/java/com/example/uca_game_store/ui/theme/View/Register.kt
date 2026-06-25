@@ -1,6 +1,5 @@
 package com.example.uca_game_store.ui.theme.View
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -8,7 +7,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.uca_game_store.ui.viewmodel.AuthViewModel
+
+// Aquí están los imports corregidos
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import com.example.uca_game_store.ui.viewmodels.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
