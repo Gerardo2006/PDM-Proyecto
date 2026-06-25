@@ -15,7 +15,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Test_homescreenTheme {
-                HomeScreen()
+                //HomeScreen()
+                DetalleJuegoScreen()
             }
         }
     }
@@ -25,6 +26,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun HomeScreenPreview() {
     Test_homescreenTheme {
-        HomeScreen()
+        //HomeScreen()
+        DetalleJuegoScreen()
     }
 }
