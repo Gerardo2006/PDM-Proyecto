@@ -63,6 +63,9 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
 
+    //Iconos
+    implementation("androidx.compose.material:material-icons-extended")
+
 
     //Navegacion
     implementation("androidx.navigation:navigation-compose:${nav_version}")
