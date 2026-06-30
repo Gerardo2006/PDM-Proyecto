@@ -3,71 +3,49 @@ package com.example.uca_game_store
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.uca_game_store.ui.screens.CarritoScreen
-import com.example.uca_game_store.ui.screens.FavoritosScreen
-import com.example.uca_game_store.ui.theme.UCA_Game_StoreTheme
+import com.example.uca_game_store.ui.screens.HomeScreen
+import com.example.uca_game_store.ui.screens.Login
+import com.example.uca_game_store.ui.screens.Register
+import com.example.uca_game_store.ui.viewmodels.AuthViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            UCA_Game_StoreTheme {
-                // Surface es el contenedor principal que usa el color de fondo de tu tema
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    // Llamamos a nuestra función de prueba
-                    PantallaDePrueba()
-                }
-            }
+            AppNavigation()
         }
     }
 }
 
 @Composable
-fun PantallaDePrueba() {
-    // Esto controla la navegación entre pantallas
+fun AppNavigation() {
     val navController = rememberNavController()
+    val authViewModel: AuthViewModel = viewModel()
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // --- Barra superior temporal con botones para probar ---
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(onClick = { navController.navigate("carrito") }) {
-                Text("Ver Carrito")
-            }
-            Button(onClick = { navController.navigate("favoritos") }) {
-                Text("Ver Favoritos")
-            }
+    NavHost(navController = navController, startDestination = "login") {
+        // Pantalla de Login
+        composable("login") {
+            Login(
+                viewModel = authViewModel,
+                onLoginSuccess = { navController.navigate("home") { popUpTo("login") { inclusive = true } } },
+                onNavigateToRegister = { navController.navigate("register") }
+            )
         }
-
-        HorizontalDivider()
-
-        // --- El espacio donde se cargarán las pantallas ---
-        NavHost(
-            navController = navController,
-            startDestination = "carrito", // Empieza mostrando el carrito por defecto
-            modifier = Modifier.weight(1f)
-        ) {
-            composable("carrito") {
-                CarritoScreen()
-            }
-            composable("favoritos") {
-                FavoritosScreen()
-            }
+        // Pantalla de Registro
+        composable("register") {
+            Register(
+                viewModel = authViewModel,
+                onRegisterSuccess = { navController.navigate("login") { popUpTo("register") { inclusive = true } } }
+            )
+        }
+        // Pantalla Principal
+        composable("home") {
+            HomeScreen(onNavigateToLogin = { navController.navigate("login") { popUpTo("home") { inclusive = true } } })
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.uca_game_store.ui.theme.View
+package com.example.uca_game_store.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,13 +11,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.uca_game_store.ui.viewmodels.AuthViewModel
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Login(viewModel: AuthViewModel) {
+fun Login(
+    viewModel: AuthViewModel,
+    onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit
+) {
     var correo by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
     val authState by viewModel.authState.collectAsState()
+
+    // Este efecto detecta cuando el estado cambia a "SUCCESS"
+    LaunchedEffect(authState) {
+        if (authState == "SUCCESS") {
+            onLoginSuccess()
+        }
+    }
 
     val backgroundGradient = Brush.horizontalGradient(colors = listOf(Color(0xFFFF7F11), Color(0xFF00BFA6)))
 
@@ -40,6 +50,11 @@ fun Login(viewModel: AuthViewModel) {
 
                     Button(onClick = { viewModel.login(correo, contrasena) }) {
                         Text("Entrar")
+                    }
+
+                    // Botón para ir al registro
+                    TextButton(onClick = { onNavigateToRegister() }) {
+                        Text("¿No tienes cuenta? Regístrate")
                     }
 
                     if (authState?.startsWith("ERROR") == true) {
