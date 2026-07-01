@@ -5,5 +5,5 @@ data class Game(
     val title: String,
     val description: String,
     val price: String,
-    val imageRes: Int? = null // Resource ID para imágenes locales
+    val imageUrl: String = ""
 )

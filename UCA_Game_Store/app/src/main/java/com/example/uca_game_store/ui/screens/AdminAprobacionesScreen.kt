@@ -21,8 +21,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.uca_game_store.data.model.SolicitudVenta
 import com.example.uca_game_store.ui.viewmodels.AdminAprobacionesViewModel
-
-// Asegúrate de tener estos colores en tu archivo ui/theme/Color.kt
 import com.example.uca_game_store.ui.theme.UcaCardBackground
 import com.example.uca_game_store.ui.theme.UcaDarkBackground
 import com.example.uca_game_store.ui.theme.UcaGreen
@@ -33,7 +31,6 @@ import com.example.uca_game_store.ui.theme.UcaOrange
 fun AdminAprobacionesScreen(
     viewModel: AdminAprobacionesViewModel = viewModel()
 ) {
-    // Escuchamos la lista de solicitudes desde el ViewModel
     val solicitudes by viewModel.solicitudes.collectAsState()
 
     Scaffold(
@@ -67,6 +64,7 @@ fun AdminAprobacionesScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
+                // Usamos solicitud.id (que es String)
                 items(solicitudes, key = { it.id }) { solicitud ->
                     SolicitudItem(
                         solicitud = solicitud,
@@ -98,19 +96,22 @@ fun SolicitudItem(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
+                // Corregido: accedemos a 'nombre' en lugar de 'juegoNombre'
                 Text(
-                    text = solicitud.juegoNombre,
+                    text = solicitud.nombre,
                     color = UcaOrange,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
+                // Corregido: accedemos a 'descripcion' o simplemente eliminamos 'vendedor'
+                // si no existe en el modelo SolicitudVenta
                 Text(
-                    text = "Vendedor: ${solicitud.vendedor}",
+                    text = solicitud.descripcion,
                     color = Color.LightGray,
                     fontSize = 14.sp
                 )
                 Text(
-                    text = solicitud.precio,
+                    text = "$${solicitud.precio}",
                     color = Color.White,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(top = 4.dp)
@@ -118,7 +119,6 @@ fun SolicitudItem(
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Botón Rechazar
                 IconButton(
                     onClick = onRechazar,
                     modifier = Modifier.background(Color.Red.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
@@ -126,7 +126,6 @@ fun SolicitudItem(
                     Icon(Icons.Default.Close, contentDescription = "Rechazar", tint = Color.Red)
                 }
 
-                // Botón Aprobar
                 IconButton(
                     onClick = onAprobar,
                     modifier = Modifier.background(UcaGreen.copy(alpha = 0.2f), RoundedCornerShape(8.dp))

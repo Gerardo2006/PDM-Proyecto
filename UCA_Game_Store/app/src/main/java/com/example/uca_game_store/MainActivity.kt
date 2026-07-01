@@ -9,8 +9,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.uca_game_store.ui.screens.HomeScreen
-import com.example.uca_game_store.ui.screens.Login
-import com.example.uca_game_store.ui.screens.Register
+import com.example.uca_game_store.ui.screens.LoginScreen // CORREGIDO: Ajusta según el nombre de tu archivo
+import com.example.uca_game_store.ui.screens.Register // CORREGIDO: Ajusta según el nombre de tu archivo
 import com.example.uca_game_store.ui.viewmodels.AuthViewModel
 
 class MainActivity : ComponentActivity() {
@@ -30,7 +30,8 @@ fun AppNavigation() {
     NavHost(navController = navController, startDestination = "login") {
         // Pantalla de Login
         composable("login") {
-            Login(
+            LoginScreen( // CORREGIDO el nombre de la función
+                navController = navController,
                 viewModel = authViewModel,
                 onLoginSuccess = { navController.navigate("home") { popUpTo("login") { inclusive = true } } },
                 onNavigateToRegister = { navController.navigate("register") }
@@ -38,14 +39,17 @@ fun AppNavigation() {
         }
         // Pantalla de Registro
         composable("register") {
-            Register(
+            Register( // CORREGIDO el nombre de la función
                 viewModel = authViewModel,
                 onRegisterSuccess = { navController.navigate("login") { popUpTo("register") { inclusive = true } } }
             )
         }
         // Pantalla Principal
         composable("home") {
-            HomeScreen(onNavigateToLogin = { navController.navigate("login") { popUpTo("home") { inclusive = true } } })
+            HomeScreen(
+                onNavigateToLogin = { navController.navigate("login") { popUpTo("home") { inclusive = true } } },
+                onGameClick = { gameId -> /* Aquí puedes manejar la navegación a detalle si lo necesitas */ }
+            )
         }
     }
 }

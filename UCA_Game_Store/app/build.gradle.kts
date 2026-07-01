@@ -38,6 +38,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.ui.text)
     val nav_version = "2.9.8"
     val lifecycle_version = "2.10.0"
 

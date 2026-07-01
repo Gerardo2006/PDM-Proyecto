@@ -18,21 +18,21 @@ class AdminAprobacionesViewModel : ViewModel() {
 
     private fun cargarSolicitudes() {
         _solicitudes.value = listOf(
-            SolicitudVenta(1, "Elden Ring", "Juan Perez", "$45.00"),
-            SolicitudVenta(2, "Hogwarts Legacy", "Maria Garcia", "$35.00"),
-            SolicitudVenta(3, "Resident Evil 4", "Luis Rodriguez", "$40.00"),
-            SolicitudVenta(4, "Cyberpunk 2077", "Ana Martinez", "$25.00"),
-            SolicitudVenta(5, "Final Fantasy XVI", "Carlos Lopez", "$50.00")
+            SolicitudVenta("1", "Elden Ring", "Juan Perez", "45.00", ),
+            SolicitudVenta("2", "Hogwarts Legacy", "Maria Garcia", "$35.00"),
+            SolicitudVenta("3", "Resident Evil 4", "Luis Rodriguez", "$40.00"),
+            SolicitudVenta("4", "Cyberpunk 2077", "Ana Martinez", "$25.00"),
+            SolicitudVenta("5", "Final Fantasy XVI", "Carlos Lopez", "$50.00")
         )
     }
 
     // Funciones que se llaman al tocar los botones
-    fun aprobarSolicitud(id: Int) {
+    fun aprobarSolicitud(id: String) {
         // TODO: A futuro, aquí se actualizará el estado en Firebase
         _solicitudes.value = _solicitudes.value.filter { it.id != id }
     }
 
-    fun rechazarSolicitud(id: Int) {
+    fun rechazarSolicitud(id: String) {
         // TODO: A futuro, aquí se eliminará de Firebase
         _solicitudes.value = _solicitudes.value.filter { it.id != id }
     }

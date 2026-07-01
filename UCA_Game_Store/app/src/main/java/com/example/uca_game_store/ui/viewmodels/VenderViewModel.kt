@@ -1,17 +1,12 @@
 package com.example.uca_game_store.viewmodels
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.uca_game_store.data.model.SolicitudVenta
-import com.google.firebase.auth.FirebaseAuth
+import com.example.uca_game_store.data.repository.VentaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
-/**
- * Estado de la UI para la pantalla de "Vender / Publicar juego".
- */
+// Estado simple para la UI
 data class VenderUiState(
     val titulo: String = "",
     val descripcion: String = "",
@@ -21,69 +16,34 @@ data class VenderUiState(
 )
 
 class VenderViewModel : ViewModel() {
+    private val repository = VentaRepository()
 
     private val _uiState = MutableStateFlow(VenderUiState())
-    val uiState: StateFlow<VenderUiState> = _uiState.asStateFlow()
+    val uiState = _uiState.asStateFlow()
 
-    // Mensaje puntual para el Snackbar (null = nada que mostrar)
     private val _snackbarMessage = MutableStateFlow<String?>(null)
-    val snackbarMessage: StateFlow<String?> = _snackbarMessage.asStateFlow()
+    val snackbarMessage = _snackbarMessage.asStateFlow()
 
-    fun onTituloChange(value: String) {
-        _uiState.value = _uiState.value.copy(titulo = value)
-    }
-
-    fun onDescripcionChange(value: String) {
-        if (value.length <= 100) {
-            _uiState.value = _uiState.value.copy(descripcion = value)
-        }
-    }
-
-    fun onPrecioChange(value: String) {
-        _uiState.value = _uiState.value.copy(precio = value)
-    }
-
-    fun onFotoCapturada(uri: String?) {
-        _uiState.value = _uiState.value.copy(fotoUri = uri)
-    }
+    fun onTituloChange(it: String) { _uiState.value = _uiState.value.copy(titulo = it) }
+    fun onDescripcionChange(it: String) { _uiState.value = _uiState.value.copy(descripcion = it) }
+    fun onPrecioChange(it: String) { _uiState.value = _uiState.value.copy(precio = it) }
+    fun onFotoCapturada(uri: String?) { _uiState.value = _uiState.value.copy(fotoUri = uri) }
+    fun snackbarMostrado() { _snackbarMessage.value = null }
 
     fun enviarSolicitud() {
-        viewModelScope.launch {
-            val estado = _uiState.value
+        val currentState = _uiState.value
+        _uiState.value = currentState.copy(isSubmitting = true)
 
-            // Ahora validamos también la descripción
-            if (estado.titulo.isBlank() || estado.precio.isBlank() || estado.descripcion.isBlank()) {
-                _snackbarMessage.value = "Completa el título, precio y descripción"
-                return@launch
-            }
+        val nuevaSolicitud = SolicitudVenta(
+            nombre = currentState.titulo,
+            descripcion = currentState.descripcion,
+            precio = currentState.precio,
+            fotoUri = currentState.fotoUri ?: ""
+        )
 
-            val usuarioActual = FirebaseAuth.getInstance().currentUser
-            val nombreVendedor = usuarioActual?.displayName
-                ?: usuarioActual?.email
-                ?: "Usuario desconocido"
-
-            _uiState.value = estado.copy(isSubmitting = true)
-
-            // Creamos la solicitud incluyendo los nuevos campos
-            val solicitud = SolicitudVenta(
-                id = System.currentTimeMillis().toInt(),
-                juegoNombre = estado.titulo,
-                vendedor = nombreVendedor,
-                precio = estado.precio,
-                descripcion = estado.descripcion, // Incluido
-                fotoUri = estado.fotoUri,         // Incluido
-                estado = "Pendiente"
-            )
-
-            // TODO: aquí se conecta con GameRepository, ej:
-            //gameRepository.crearSolicitudVenta(solicitud)
-
-            _uiState.value = VenderUiState() // limpia el formulario
-            _snackbarMessage.value = "Solicitud enviada correctamente"
+        repository.guardarVenta(nuevaSolicitud) { success ->
+            _uiState.value = currentState.copy(isSubmitting = false)
+            _snackbarMessage.value = if (success) "¡Solicitud enviada!" else "Error al enviar"
         }
-    }
-
-    fun snackbarMostrado() {
-        _snackbarMessage.value = null
     }
 }

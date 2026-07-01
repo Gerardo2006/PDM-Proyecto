@@ -12,8 +12,8 @@ data class DetalleJuego(
     val esFavorito: Boolean = false
 )
 
-data class Resena(
+/*data class Resena(
     val usuario: String,
     val estrellas: Int,
     val comentario: String
-)
+)*/

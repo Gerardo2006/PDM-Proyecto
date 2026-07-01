@@ -23,10 +23,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.uca_game_store.ui.viewmodels.DetalleJuegoViewModel
+import com.example.uca_game_store.ui.viewmodels.ResenasViewModel
 
-// Colores de la pantalla (puedes moverlos a tu archivo Color.kt después si deseas)
+// Colores
 val FondoOscuro = Color(0xFF121212)
 val FondoTarjeta = Color(0xFF1E1E24)
 val NaranjaUca = Color(0xFFFF8C00)
@@ -36,21 +38,20 @@ val TextoGris = Color(0xFFAAAAAA)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetalleJuegoScreen(
-    viewModel: DetalleJuegoViewModel = viewModel(),
-    onNavigateBack: () -> Unit = {} // Parámetro para conectar el botón volver a la navegación
+    gameId: Int,
+    navController: NavController,
+    viewModel: DetalleJuegoViewModel = viewModel()
 ) {
-    // Observamos los datos desde el ViewModel
     val juego = viewModel.juego.collectAsState().value
     val listaResenas = viewModel.resenas.collectAsState().value
+    val resenasViewModel: ResenasViewModel = viewModel()
 
-    // Estados visuales (Estos sí se quedan en la vista porque solo afectan la UI)
     var descripcionExpandida by remember { mutableStateOf(false) }
     var mostrarBottomSheet by remember { mutableStateOf(false) }
     var estrellasSeleccionadas by remember { mutableIntStateOf(0) }
     var textoResena by remember { mutableStateOf("") }
     val maxCaracteres = 500
 
-    // Si el juego aún no carga, mostramos un indicador
     if (juego == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = NaranjaUca)
@@ -86,7 +87,6 @@ fun DetalleJuegoScreen(
             }
         }
     ) { paddingValues ->
-
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -96,7 +96,7 @@ fun DetalleJuegoScreen(
         ) {
             item {
                 Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-                    TextButton(onClick = onNavigateBack) {
+                    TextButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = VerdeUca)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Volver", color = VerdeUca)
@@ -117,7 +117,6 @@ fun DetalleJuegoScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Título, Precio, Vendedor Y Favorito
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -131,7 +130,6 @@ fun DetalleJuegoScreen(
                         Text(text = "$${juego.precio}", color = VerdeUca, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     }
 
-                    // Botón de Favorito conectado al ViewModel
                     IconButton(onClick = { viewModel.alternarFavorito() }) {
                         Icon(
                             imageVector = if (juego.esFavorito) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
@@ -144,7 +142,6 @@ fun DetalleJuegoScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Insignia calificacion
             item {
                 Surface(
                     color = FondoTarjeta,
@@ -186,7 +183,6 @@ fun DetalleJuegoScreen(
                 HorizontalDivider(color = Color.DarkGray, modifier = Modifier.padding(vertical = 16.dp))
             }
 
-            // Lista reseñas
             item {
                 Text(
                     text = "Reseñas de usuarios",
@@ -207,13 +203,13 @@ fun DetalleJuegoScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(text = "Usuario: ${resena.usuario}", color = VerdeUca, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Text(text = "Usuario: ${resena.usuarioId}", color = VerdeUca, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                             Row {
                                 repeat(5) { index ->
                                     Icon(
                                         imageVector = Icons.Filled.Star,
                                         contentDescription = null,
-                                        tint = if (index < resena.estrellas) Color.White else TextoGris,
+                                        tint = if (index < resena.calificacion) Color.White else TextoGris,
                                         modifier = Modifier.size(12.dp)
                                     )
                                 }
@@ -224,75 +220,37 @@ fun DetalleJuegoScreen(
                     }
                 }
             }
-
-            item {
-                Spacer(modifier = Modifier.height(32.dp))
-            }
         }
 
-        // Bottom Sheet interactivo para enviar reseña
         if (mostrarBottomSheet) {
             ModalBottomSheet(
                 onDismissRequest = { mostrarBottomSheet = false },
                 containerColor = FondoTarjeta
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp)
-                        .padding(bottom = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(20.dp).padding(bottom = 32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(text = "Escribe tu reseña", color = NaranjaUca, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Row {
                         for (i in 1..5) {
                             IconButton(onClick = { estrellasSeleccionadas = i }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Star,
-                                    contentDescription = "Estrella $i",
-                                    tint = if (i <= estrellasSeleccionadas) NaranjaUca else TextoGris,
-                                    modifier = Modifier.size(32.dp)
-                                )
+                                Icon(Icons.Filled.Star, contentDescription = "Estrella $i", tint = if (i <= estrellasSeleccionadas) NaranjaUca else TextoGris, modifier = Modifier.size(32.dp))
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
-
                     OutlinedTextField(
                         value = textoResena,
                         onValueChange = { if (it.length <= maxCaracteres) textoResena = it },
                         placeholder = { Text("Escribe tu reseña aquí...", color = TextoGris) },
                         modifier = Modifier.fillMaxWidth().height(120.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = FondoOscuro,
-                            unfocusedContainerColor = FondoOscuro,
-                            focusedBorderColor = VerdeUca,
-                            unfocusedBorderColor = Color.DarkGray,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        ),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = VerdeUca, unfocusedBorderColor = Color.DarkGray, focusedTextColor = Color.White, unfocusedTextColor = Color.White),
                         maxLines = 5
                     )
 
-                    Text(
-                        text = "${textoResena.length}/$maxCaracteres",
-                        color = TextoGris,
-                        fontSize = 12.sp,
-                        modifier = Modifier.align(Alignment.End).padding(top = 4.dp, bottom = 16.dp)
-                    )
-
                     Button(
-                        onClick = {
-                            // Enviamos la información al ViewModel
-                            viewModel.enviarResena(estrellasSeleccionadas, textoResena)
-                            // Cerramos y limpiamos
-                            mostrarBottomSheet = false
-                            textoResena = ""
-                            estrellasSeleccionadas = 0
-                        },
+                        onClick = { viewModel.enviarResena(estrellasSeleccionadas, textoResena); mostrarBottomSheet = false },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = VerdeUca, contentColor = Color.Black)
                     ) {
