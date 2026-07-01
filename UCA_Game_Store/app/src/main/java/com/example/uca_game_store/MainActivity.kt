@@ -9,9 +9,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.uca_game_store.ui.screens.HomeScreen
-import com.example.uca_game_store.ui.screens.LoginScreen // CORREGIDO: Ajusta según el nombre de tu archivo
-import com.example.uca_game_store.ui.screens.Register // CORREGIDO: Ajusta según el nombre de tu archivo
+import com.example.uca_game_store.ui.screens.LoginScreen
+import com.example.uca_game_store.ui.screens.Register
 import com.example.uca_game_store.ui.viewmodels.AuthViewModel
+import com.example.uca_game_store.ui.viewmodels.HomeViewModel
+import com.example.uca_game_store.ui.viewmodels.CarritoViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,30 +27,57 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+
+    // Inicializamos los ViewModels principales de la app
     val authViewModel: AuthViewModel = viewModel()
+    val homeViewModel: HomeViewModel = viewModel()
+    val carritoViewModel: CarritoViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = "login") {
-        // Pantalla de Login
+
+        // 1. Pantalla de Login
         composable("login") {
-            LoginScreen( // CORREGIDO el nombre de la función
+            LoginScreen(
                 navController = navController,
                 viewModel = authViewModel,
-                onLoginSuccess = { navController.navigate("home") { popUpTo("login") { inclusive = true } } },
-                onNavigateToRegister = { navController.navigate("register") }
+                onLoginSuccess = {
+                    navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onNavigateToRegister = {
+                    navController.navigate("register")
+                }
             )
         }
-        // Pantalla de Registro
+
+        // 2. Pantalla de Registro
         composable("register") {
-            Register( // CORREGIDO el nombre de la función
+            Register(
                 viewModel = authViewModel,
-                onRegisterSuccess = { navController.navigate("login") { popUpTo("register") { inclusive = true } } }
+                onRegisterSuccess = {
+                    navController.navigate("login") {
+                        popUpTo("register") { inclusive = true }
+                    }
+                }
             )
         }
-        // Pantalla Principal
+
+        // 3. Pantalla Principal (Contenedor con el Bottom Navigation e Inicio integrado)
         composable("home") {
             HomeScreen(
-                onNavigateToLogin = { navController.navigate("login") { popUpTo("home") { inclusive = true } } },
-                onGameClick = { gameId -> /* Aquí puedes manejar la navegación a detalle si lo necesitas */ }
+                viewModel = homeViewModel,
+                authViewModel = authViewModel,
+                carritoViewModel = carritoViewModel,
+                onNavigateToLogin = {
+                    // Al presionar Salir, limpiamos el historial por completo por seguridad
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onGameClick = { gameId ->
+                    // Listo por si a futuro necesitas navegar a una pantalla de detalles extendida
+                }
             )
         }
     }

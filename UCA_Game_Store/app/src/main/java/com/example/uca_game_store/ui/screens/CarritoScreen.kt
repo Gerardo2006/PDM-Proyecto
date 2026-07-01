@@ -27,12 +27,18 @@ fun CarritoScreen(viewModel: CarritoViewModel = viewModel()) {
     val cartItems by viewModel.cartItems.collectAsState()
     val total by viewModel.totalPrice.collectAsState()
 
-    Column(modifier = Modifier.fillMaxSize().background(FondoOscuro).padding(16.dp)) {
-        Text("Tu Carrito", color = NaranjaUca, fontSize = 28.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
+    Column(modifier = Modifier.fillMaxSize().background(UcaDarkBackground).padding(16.dp)) {
+        Text("Tu Carrito", color = UcaOrange, fontSize = 28.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
 
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(cartItems) { item ->
-                CartItemRow(item)
+        if (cartItems.isEmpty()) {
+            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text("Tu carrito está vacío", color = Color.Gray, fontSize = 16.sp)
+            }
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(cartItems) { item ->
+                    CartItemRow(item)
+                }
             }
         }
 
@@ -40,7 +46,7 @@ fun CarritoScreen(viewModel: CarritoViewModel = viewModel()) {
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text("Total:", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Text("$${"%.2f".format(total)}", fontSize = 22.sp, color = VerdeUca, fontWeight = FontWeight.Bold)
+            Text("$${"%.2f".format(total)}", fontSize = 22.sp, color = UcaGreen, fontWeight = FontWeight.Bold)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -48,7 +54,7 @@ fun CarritoScreen(viewModel: CarritoViewModel = viewModel()) {
         Button(
             onClick = { viewModel.finalizarCompra() },
             modifier = Modifier.fillMaxWidth().height(50.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = VerdeUca, contentColor = Color.Black),
+            colors = ButtonDefaults.buttonColors(containerColor = UcaGreen, contentColor = Color.Black),
             enabled = cartItems.isNotEmpty()
         ) {
             Text("Finalizar compra", fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -58,10 +64,18 @@ fun CarritoScreen(viewModel: CarritoViewModel = viewModel()) {
 
 @Composable
 fun CartItemRow(item: CartItem) {
-    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), colors = CardDefaults.cardColors(containerColor = FondoTarjeta), shape = RoundedCornerShape(12.dp)) {
-        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(item.title, color = Color.White, modifier = Modifier.weight(1f))
-            Text("$${"%.2f".format(item.price)}", color = VerdeUca, fontWeight = FontWeight.Bold)
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = UcaCardBackground),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(item.title, color = Color.White, modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
+            Text("$${"%.2f".format(item.price)}", color = UcaGreen, fontWeight = FontWeight.Bold)
         }
     }
 }

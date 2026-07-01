@@ -34,6 +34,7 @@ fun UcaBottomNavigation(selectedItem: Int, isAdmin: Boolean, onItemSelected: (In
                         contentDescription = label,
                         tint = if (selectedItem == index) UcaOrange else Color.White
                     )
+
                 },
                 label = { Text(label, color = Color.White) }
             )

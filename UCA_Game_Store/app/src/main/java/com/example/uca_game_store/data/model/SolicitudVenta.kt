@@ -1,14 +1,14 @@
 package com.example.uca_game_store.data.model
 
 data class SolicitudVenta(
-    val id: String = "", // Usaremos el ID que genera Firebase automáticamente
+    val id: String = "", // <-- AGREGAMOS ESTO para guardar el ID de Firebase y solucionar el error del Repositorio
     val nombre: String = "",
     val descripcion: String = "",
     val precio: String = "",
     val fotoUri: String = "",
-    val estado: String = "PENDIENTE" // Útil para la lógica de administración
+    val vendedorId: String = "",
+    val estado: String = "PENDIENTE"
 )
-
 /*data class SolicitudVenta(
     val id: Int,
     val nombre: String,
