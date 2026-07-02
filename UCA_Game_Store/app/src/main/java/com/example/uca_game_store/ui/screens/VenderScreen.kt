@@ -34,6 +34,7 @@ import com.example.uca_game_store.viewmodels.VenderViewModel
 import com.example.uca_game_store.ui.theme.UcaCardBackground
 import com.example.uca_game_store.ui.theme.UcaDarkBackground
 import com.example.uca_game_store.ui.theme.UcaOrange
+import com.example.uca_game_store.ui.theme.UcaGreen
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -83,7 +84,6 @@ fun VenderScreen(
         }
     }
 
-    // Diálogo de Destacado
     if (uiState.mostrarDialogoDestacado) {
         AlertDialog(
             onDismissRequest = { viewModel.cerrarDialogo() },
@@ -95,7 +95,7 @@ fun VenderScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { viewModel.enviarSolicitud(false) }) {
+                TextButton(onClick = { viewModel.cerrarDialogo(); viewModel.enviarSolicitud(false) }) {
                     Text("NO", color = Color.Gray)
                 }
             },
@@ -107,16 +107,6 @@ fun VenderScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text("Publicar Nuevo Juego", color = Color.White, fontWeight = FontWeight.Bold)
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = UcaCardBackground
-                )
-            )
-        },
         containerColor = UcaDarkBackground
     ) { padding ->
         Column(
@@ -128,18 +118,32 @@ fun VenderScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            Text(
+                "Publicar un nuevo juego en venta",
+                color = UcaOrange,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+
             Column {
+                Text("Nombre del juego", color = UcaOrange, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = uiState.titulo,
                     onValueChange = { viewModel.onTituloChange(it) },
-                    label = { Text("Título del Juego", color = Color.LightGray) },
+                    placeholder = { Text("Escribe el nombre...", color = Color.Gray) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         focusedBorderColor = UcaOrange,
-                        unfocusedBorderColor = Color.Gray
-                    )
+                        unfocusedBorderColor = Color.DarkGray,
+                        focusedContainerColor = UcaCardBackground,
+                        unfocusedContainerColor = UcaCardBackground
+                    ),
+                    shape = RoundedCornerShape(8.dp)
                 )
                 Text(
                     text = "${uiState.titulo.length} / 70",
@@ -151,17 +155,22 @@ fun VenderScreen(
             }
 
             Column {
+                Text("Descripción", color = UcaOrange, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = uiState.descripcion,
                     onValueChange = { viewModel.onDescripcionChange(it) },
-                    label = { Text("Descripción", color = Color.LightGray) },
-                    modifier = Modifier.fillMaxWidth().height(120.dp),
+                    placeholder = { Text("Escribe una breve descripción...", color = Color.Gray) },
+                    modifier = Modifier.fillMaxWidth().height(150.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         focusedBorderColor = UcaOrange,
-                        unfocusedBorderColor = Color.Gray
-                    )
+                        unfocusedBorderColor = Color.DarkGray,
+                        focusedContainerColor = UcaCardBackground,
+                        unfocusedContainerColor = UcaCardBackground
+                    ),
+                    shape = RoundedCornerShape(8.dp)
                 )
                 Text(
                     text = "${uiState.descripcion.length} / 200",
@@ -172,19 +181,33 @@ fun VenderScreen(
                 )
             }
 
-            OutlinedTextField(
-                value = uiState.precio,
-                onValueChange = { viewModel.onPrecioChange(it) },
-                label = { Text("Precio ($)", color = Color.LightGray) },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = UcaOrange,
-                    unfocusedBorderColor = Color.Gray
+            Column {
+                Text("Precio", color = UcaOrange, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = uiState.precio,
+                    onValueChange = { viewModel.onPrecioChange(it) },
+                    placeholder = { Text("$0.00", color = Color.Gray) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = UcaOrange,
+                        unfocusedBorderColor = Color.DarkGray,
+                        focusedContainerColor = UcaCardBackground,
+                        unfocusedContainerColor = UcaCardBackground
+                    ),
+                    shape = RoundedCornerShape(8.dp)
                 )
-            )
+                Text(
+                    text = "Máximo: $1000.00",
+                    color = Color.Gray,
+                    fontSize = 12.sp,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.End
+                )
+            }
 
             if (uiState.fotoUri != null) {
                 AsyncImage(
@@ -197,24 +220,39 @@ fun VenderScreen(
 
             Button(
                 onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+                colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
+                shape = RoundedCornerShape(8.dp)
             ) {
+                Icon(Icons.Default.PhotoCamera, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(if (uiState.fotoUri == null) "Tomar Foto" else "Cambiar Foto")
             }
 
-            Button(
-                onClick = { viewModel.onPublicarClick() },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                enabled = !uiState.isSubmitting,
-                colors = ButtonDefaults.buttonColors(containerColor = UcaOrange)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(if (uiState.isSubmitting) "Enviando..." else "Publicar Venta")
+                Button(
+                    onClick = { viewModel.onPublicarClick() },
+                    modifier = Modifier.weight(1f).height(50.dp),
+                    enabled = !uiState.isSubmitting,
+                    colors = ButtonDefaults.buttonColors(containerColor = UcaGreen),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(if (uiState.isSubmitting) "Enviando..." else "Enviar Solicitud", fontWeight = FontWeight.Bold)
+                }
             }
+            
+            Text(
+                "© 2025 UCA Game Store",
+                color = Color.DarkGray,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
     }
 }
 
-// Función auxiliar necesaria
 fun Context.crearArchivoDeImagen(): File {
     val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
     return File.createTempFile("JPEG_${timeStamp}_", ".jpg", cacheDir)
