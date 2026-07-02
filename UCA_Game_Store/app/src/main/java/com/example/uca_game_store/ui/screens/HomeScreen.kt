@@ -8,14 +8,18 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,6 +53,7 @@ fun HomeScreen(
     val isAdmin by viewModel.isAdmin.collectAsState()
     var selectedItem by remember { mutableIntStateOf(0) }
     var juegoSeleccionado by remember { mutableStateOf<SolicitudVenta?>(null) }
+    var mostrarDialogoCerrarSesion by remember { mutableStateOf(false) }
 
     val labels = remember(isAdmin) {
         val list = mutableListOf("Inicio", "WishList", "Vender", "Carrito")
@@ -57,14 +62,40 @@ fun HomeScreen(
         list
     }
 
+    if (mostrarDialogoCerrarSesion) {
+        AlertDialog(
+            onDismissRequest = { mostrarDialogoCerrarSesion = false },
+            title = { Text("Cerrar Sesión") },
+            text = { Text("¿Estás seguro de que quieres salir?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        mostrarDialogoCerrarSesion = false
+                        authViewModel.signOut()
+                        viewModel.resetState()
+                        onNavigateToLogin()
+                    }
+                ) {
+                    Text("SÍ", color = Color(0xFFFF8C00))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { mostrarDialogoCerrarSesion = false }) {
+                    Text("NO", color = Color.Gray)
+                }
+            },
+            containerColor = Color(0xFF1E1E24),
+            titleContentColor = Color.White,
+            textContentColor = Color.LightGray
+        )
+    }
+
     Scaffold(
         bottomBar = {
             UcaBottomNavigation(selectedItem, isAdmin) { index ->
                 val clickedLabel = labels.getOrNull(index)
                 if (clickedLabel == "Salir") {
-                    authViewModel.signOut()
-                    viewModel.resetState()
-                    onNavigateToLogin()
+                    mostrarDialogoCerrarSesion = true
                 } else {
                     selectedItem = index
                 }
@@ -151,10 +182,14 @@ fun DetailAndActionBottomSheet(
     game: SolicitudVenta,
     onDismiss: () -> Unit,
     onComprarClick: () -> Unit,
-    viewModel: HomeViewModel = viewModel()
+    viewModel: HomeViewModel = viewModel(),
+    isAdminMode: Boolean = false,
+    onAprobar: (() -> Unit)? = null,
+    onRechazar: (() -> Unit)? = null
 ) {
     var rating by remember { mutableIntStateOf(0) }
     var reviewText by remember { mutableStateOf("") }
+    var mostrarImagenAgrandada by remember { mutableStateOf(false) }
 
     val listaReseñas by viewModel.reseñasJuegoSeleccionado.collectAsState()
     val favoritosIds by viewModel.favoritosIds.collectAsState()
@@ -164,13 +199,62 @@ fun DetailAndActionBottomSheet(
         viewModel.cargarReseñasDelJuego(game.id)
     }
 
+    if (mostrarImagenAgrandada) {
+        androidx.compose.ui.window.Dialog(
+            onDismissRequest = { mostrarImagenAgrandada = false },
+            properties = androidx.compose.ui.window.DialogProperties(
+                usePlatformDefaultWidth = false
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+            ) {
+                AsyncImage(
+                    model = game.fotoUri,
+                    contentDescription = "Imagen agrandada",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .align(Alignment.Center),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                )
+                IconButton(
+                    onClick = { mostrarImagenAgrandada = false },
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .align(Alignment.TopEnd)
+                        .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(50))
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.White)
+                }
+            }
+        }
+    }
+
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF1E1E24)) {
         Column(
             modifier = Modifier
                 .padding(24.dp)
                 .fillMaxWidth()
                 .navigationBarsPadding()
+                .verticalScroll(rememberScrollState())
         ) {
+            // Imagen del juego
+            if (game.fotoUri.isNotEmpty()) {
+                AsyncImage(
+                    model = game.fotoUri,
+                    contentDescription = game.nombre,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { mostrarImagenAgrandada = true },
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             // Fila Superior: Información del juego + Control de Favoritos
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -184,13 +268,15 @@ fun DetailAndActionBottomSheet(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
-                IconButton(onClick = { viewModel.toggleFavorito(game.id) }) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "WishList",
-                        tint = if (esFavorito) Color(0xFFFFD700) else Color.Gray,
-                        modifier = Modifier.size(28.dp)
-                    )
+                if (!isAdminMode) {
+                    IconButton(onClick = { viewModel.toggleFavorito(game.id) }) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "WishList",
+                            tint = if (esFavorito) Color(0xFFFFD700) else Color.Gray,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
             }
 
@@ -198,64 +284,92 @@ fun DetailAndActionBottomSheet(
             Text(game.descripcion, color = Color.White, fontSize = 15.sp)
             Spacer(modifier = Modifier.height(12.dp))
 
-            Button(onClick = onComprarClick, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676))) {
-                Text("Añadir al carrito - $${game.precio}", fontWeight = FontWeight.Bold, color = Color.Black)
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = Color.DarkGray)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // SECCIÓN: AÑADIR NUEVA RESEÑA A FIRESTORE
-            Text("Calificar este juego:", color = Color.LightGray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(vertical = 4.dp)) {
-                for (i in 1..5) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Estrella $i",
-                        tint = if (i <= rating) Color(0xFFFFD700) else Color.Gray,
-                        modifier = Modifier.size(26.dp).clickable { rating = i }
-                    )
+            if (!isAdminMode) {
+                Button(onClick = onComprarClick, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676))) {
+                    Text("Añadir al carrito - $${game.precio}", fontWeight = FontWeight.Bold, color = Color.Black)
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = { onRechazar?.invoke(); onDismiss() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Rechazar", fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = { onAprobar?.invoke(); onDismiss() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Aprobar", fontWeight = FontWeight.Bold, color = Color.Black)
+                    }
                 }
             }
 
-            OutlinedTextField(
-                value = reviewText,
-                onValueChange = { reviewText = it },
-                modifier = Modifier.fillMaxWidth().height(70.dp),
-                placeholder = { Text("Escribe una reseña o comentario...", color = Color.Gray, fontSize = 13.sp) },
-                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White),
-                shape = RoundedCornerShape(8.dp)
-            )
+            if (!isAdminMode) {
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = Color.DarkGray)
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    viewModel.enviarReseña(game.id, rating, reviewText) {
-                        rating = 0
-                        reviewText = ""
+                // SECCIÓN: AÑADIR NUEVA RESEÑA A FIRESTORE
+                Text("Calificar este juego:", color = Color.LightGray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(vertical = 4.dp)) {
+                    for (i in 1..5) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Estrella $i",
+                            tint = if (i <= rating) Color(0xFFFFD700) else Color.Gray,
+                            modifier = Modifier.size(26.dp).clickable { rating = i }
+                        )
                     }
-                },
-                modifier = Modifier.align(Alignment.End),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF8C00))
-            ) {
-                Text("Publicar Reseña", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-            }
+                }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Opiniones de la comunidad:", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = reviewText,
+                    onValueChange = { reviewText = it },
+                    modifier = Modifier.fillMaxWidth().height(70.dp),
+                    placeholder = { Text("Escribe una reseña o comentario...", color = Color.Gray, fontSize = 13.sp) },
+                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White),
+                    shape = RoundedCornerShape(8.dp)
+                )
 
-            // SECCIÓN: LISTADO DE OPINIONES DE LA COMUNIDAD EN VIVO
-            Box(modifier = Modifier.weight(1f, fill = false).heightIn(max = 200.dp)) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        viewModel.enviarReseña(game.id, rating, reviewText) {
+                            rating = 0
+                            reviewText = ""
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.End),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF8C00))
+                ) {
+                    Text("Publicar Reseña", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Opiniones de la comunidad:", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // SECCIÓN: LISTADO DE OPINIONES DE LA COMUNIDAD
+                // CORREGIDO: Se usa Column + forEach en lugar de LazyColumn para evitar conflictos con el scroll del BottomSheet
                 if (listaReseñas.isEmpty()) {
-                    Text("Nadie ha reseñado este juego aún. ¡Sé el primero!", color = Color.Gray, fontSize = 13.sp, modifier = Modifier.padding(vertical = 8.dp))
+                    Text(
+                        "Nadie ha reseñado este juego aún. ¡Sé el primero!",
+                        color = Color.Gray,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
                 } else {
-                    androidx.compose.foundation.lazy.LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(listaReseñas) { res ->
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        listaReseñas.forEach { res ->
                             val autor = res["usuario"] as? String ?: "Anónimo"
                             val estrellas = (res["calificacion"] as? Long)?.toInt() ?: 0
                             val comentario = res["comentario"] as? String ?: ""
@@ -271,7 +385,12 @@ fun DetailAndActionBottomSheet(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(autor, color = Color(0xFFFF8C00), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        autor,
+                                        color = Color(0xFFFF8C00),
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                     Row {
                                         for (i in 1..5) {
                                             Icon(

@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
@@ -82,6 +83,28 @@ fun VenderScreen(
         }
     }
 
+    // Diálogo de Destacado
+    if (uiState.mostrarDialogoDestacado) {
+        AlertDialog(
+            onDismissRequest = { viewModel.cerrarDialogo() },
+            title = { Text("Juego Destacado") },
+            text = { Text("¿Quieres colocar tu juego en destacados? Esto tiene una tarifa de $1.99") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.enviarSolicitud(true) }) {
+                    Text("SÍ", color = UcaOrange)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.enviarSolicitud(false) }) {
+                    Text("NO", color = Color.Gray)
+                }
+            },
+            containerColor = UcaCardBackground,
+            titleContentColor = Color.White,
+            textContentColor = Color.LightGray
+        )
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -105,31 +128,49 @@ fun VenderScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            OutlinedTextField(
-                value = uiState.titulo,
-                onValueChange = { viewModel.onTituloChange(it) },
-                label = { Text("Título del Juego", color = Color.LightGray) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = UcaOrange,
-                    unfocusedBorderColor = Color.Gray
+            Column {
+                OutlinedTextField(
+                    value = uiState.titulo,
+                    onValueChange = { viewModel.onTituloChange(it) },
+                    label = { Text("Título del Juego", color = Color.LightGray) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = UcaOrange,
+                        unfocusedBorderColor = Color.Gray
+                    )
                 )
-            )
+                Text(
+                    text = "${uiState.titulo.length} / 70",
+                    color = Color.Gray,
+                    fontSize = 12.sp,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.End
+                )
+            }
 
-            OutlinedTextField(
-                value = uiState.descripcion,
-                onValueChange = { viewModel.onDescripcionChange(it) },
-                label = { Text("Descripción", color = Color.LightGray) },
-                modifier = Modifier.fillMaxWidth().height(120.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = UcaOrange,
-                    unfocusedBorderColor = Color.Gray
+            Column {
+                OutlinedTextField(
+                    value = uiState.descripcion,
+                    onValueChange = { viewModel.onDescripcionChange(it) },
+                    label = { Text("Descripción", color = Color.LightGray) },
+                    modifier = Modifier.fillMaxWidth().height(120.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = UcaOrange,
+                        unfocusedBorderColor = Color.Gray
+                    )
                 )
-            )
+                Text(
+                    text = "${uiState.descripcion.length} / 200",
+                    color = Color.Gray,
+                    fontSize = 12.sp,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.End
+                )
+            }
 
             OutlinedTextField(
                 value = uiState.precio,
@@ -162,7 +203,7 @@ fun VenderScreen(
             }
 
             Button(
-                onClick = { viewModel.enviarSolicitud() },
+                onClick = { viewModel.onPublicarClick() },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 enabled = !uiState.isSubmitting,
                 colors = ButtonDefaults.buttonColors(containerColor = UcaOrange)

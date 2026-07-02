@@ -1,6 +1,7 @@
 package com.example.uca_game_store.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,9 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,6 +31,7 @@ fun AdminAprobacionesScreen(
     viewModel: AdminAprobacionesViewModel = viewModel()
 ) {
     val solicitudes by viewModel.solicitudes.collectAsState()
+    var solicitudSeleccionada by remember { mutableStateOf<SolicitudVenta?>(null) }
 
     Scaffold(
         topBar = {
@@ -64,10 +64,10 @@ fun AdminAprobacionesScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Usamos solicitud.id (que es String)
                 items(solicitudes, key = { it.id }) { solicitud ->
                     SolicitudItem(
                         solicitud = solicitud,
+                        onClick = { solicitudSeleccionada = solicitud },
                         onAprobar = { viewModel.aprobarSolicitud(solicitud.id) },
                         onRechazar = { viewModel.rechazarSolicitud(solicitud.id) }
                     )
@@ -75,16 +75,30 @@ fun AdminAprobacionesScreen(
             }
         }
     }
+
+    if (solicitudSeleccionada != null) {
+        DetailAndActionBottomSheet(
+            game = solicitudSeleccionada!!,
+            onDismiss = { solicitudSeleccionada = null },
+            onComprarClick = { }, // No se usa en modo admin
+            isAdminMode = true,
+            onAprobar = { viewModel.aprobarSolicitud(solicitudSeleccionada!!.id) },
+            onRechazar = { viewModel.rechazarSolicitud(solicitudSeleccionada!!.id) }
+        )
+    }
 }
 
 @Composable
 fun SolicitudItem(
     solicitud: SolicitudVenta,
+    onClick: () -> Unit,
     onAprobar: () -> Unit,
     onRechazar: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = UcaCardBackground)
     ) {
@@ -96,19 +110,17 @@ fun SolicitudItem(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                // Corregido: accedemos a 'nombre' en lugar de 'juegoNombre'
                 Text(
                     text = solicitud.nombre,
                     color = UcaOrange,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
-                // Corregido: accedemos a 'descripcion' o simplemente eliminamos 'vendedor'
-                // si no existe en el modelo SolicitudVenta
                 Text(
                     text = solicitud.descripcion,
                     color = Color.LightGray,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    maxLines = 1
                 )
                 Text(
                     text = "$${solicitud.precio}",
