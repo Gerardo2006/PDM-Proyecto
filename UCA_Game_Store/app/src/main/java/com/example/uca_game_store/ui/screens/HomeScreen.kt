@@ -24,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.uca_game_store.data.model.SolicitudVenta
 import com.example.uca_game_store.data.model.CartItem
+import com.example.uca_game_store.navigation.UcaBottomNavigation
 import com.example.uca_game_store.ui.viewmodels.HomeViewModel
 import com.example.uca_game_store.ui.viewmodels.AuthViewModel
 import com.example.uca_game_store.ui.viewmodels.CarritoViewModel
@@ -50,7 +51,7 @@ fun HomeScreen(
     var juegoSeleccionado by remember { mutableStateOf<SolicitudVenta?>(null) }
 
     val labels = remember(isAdmin) {
-        val list = mutableListOf("Inicio", "Favorito", "Vender", "Carrito")
+        val list = mutableListOf("Inicio", "WishList", "Vender", "Carrito")
         if (isAdmin) list.add("Admin")
         list.add("Salir")
         list
@@ -92,7 +93,7 @@ fun HomeScreen(
                     )
                     HomeContent(games) { juegoSeleccionado = it }
                 }
-                "Favorito" -> {
+                "WishList" -> {
                     // CORREGIDO: Integración real de los videojuegos guardados en favoritos de solicitudes_venta
                     val favoritosUsuario by viewModel.juegosFavoritosObjetos.collectAsState()
 
@@ -186,7 +187,7 @@ fun DetailAndActionBottomSheet(
                 IconButton(onClick = { viewModel.toggleFavorito(game.id) }) {
                     Icon(
                         imageVector = Icons.Default.Star,
-                        contentDescription = "Favorito",
+                        contentDescription = "WishList",
                         tint = if (esFavorito) Color(0xFFFFD700) else Color.Gray,
                         modifier = Modifier.size(28.dp)
                     )
@@ -301,10 +302,27 @@ fun HomeContent(games: List<SolicitudVenta>, onGameClick: (SolicitudVenta) -> Un
         }
     } else {
         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-            Text("Destacados", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
-            FeaturedCarousel(games.take(3), onGameClick)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Catálogo General", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+            val featuredGames = games.filter { it.destacado }
+
+            if (featuredGames.isNotEmpty()) {
+                Text(
+                    "Destacados",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                FeaturedCarousel(featuredGames, onGameClick)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            Text(
+                "Catálogo General",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
             GameCatalog(games, onGameClick)
         }
     }

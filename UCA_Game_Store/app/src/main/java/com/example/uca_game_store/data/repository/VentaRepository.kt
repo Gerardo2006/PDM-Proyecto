@@ -24,7 +24,8 @@ class VentaRepository {
                 "precio" to solicitud.precio,
                 "fotoUri" to fotoOriginal, // Se guarda el link de internet directamente
                 "vendedorId" to uid,
-                "estado" to "PENDIENTE"
+                "estado" to "PENDIENTE",
+                "destacado" to solicitud.destacado
             )
 
             coleccionVentas.add(datosVenta)
@@ -48,7 +49,8 @@ class VentaRepository {
                                 "precio" to solicitud.precio,
                                 "fotoUri" to urlPublica.toString(), // Guardamos la URL pública de Storage
                                 "vendedorId" to uid,
-                                "estado" to "PENDIENTE"
+                                "estado" to "PENDIENTE",
+                                "destacado" to solicitud.destacado
                             )
 
                             coleccionVentas.add(datosVenta)

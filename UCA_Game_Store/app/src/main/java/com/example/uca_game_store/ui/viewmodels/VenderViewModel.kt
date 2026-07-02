@@ -12,6 +12,7 @@ data class VenderUiState(
     val descripcion: String = "",
     val precio: String = "",
     val fotoUri: String? = null,
+    val destacado: Boolean = false,
     val isSubmitting: Boolean = false
 )
 
@@ -28,6 +29,7 @@ class VenderViewModel : ViewModel() {
     fun onDescripcionChange(it: String) { _uiState.value = _uiState.value.copy(descripcion = it) }
     fun onPrecioChange(it: String) { _uiState.value = _uiState.value.copy(precio = it) }
     fun onFotoCapturada(uri: String?) { _uiState.value = _uiState.value.copy(fotoUri = uri) }
+    fun onDestacadoChange(it: Boolean) { _uiState.value = _uiState.value.copy(destacado = it) }
     fun snackbarMostrado() { _snackbarMessage.value = null }
 
     fun enviarSolicitud() {
@@ -38,7 +40,8 @@ class VenderViewModel : ViewModel() {
             nombre = currentState.titulo,
             descripcion = currentState.descripcion,
             precio = currentState.precio,
-            fotoUri = currentState.fotoUri ?: ""
+            fotoUri = currentState.fotoUri ?: "",
+            destacado = currentState.destacado
         )
 
         repository.guardarVenta(nuevaSolicitud) { success ->
