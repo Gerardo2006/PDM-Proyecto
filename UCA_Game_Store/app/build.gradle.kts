@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.example.uca_game_store"
-    compileSdk = 36 // Simplificado de release(36) que parecía problemático
+    compileSdk = 37 // Simplificado de release(36) que parecía problemático
 
     defaultConfig {
         applicationId = "com.example.uca_game_store"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -38,6 +38,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.ui.text)
     val nav_version = "2.9.8"
     val lifecycle_version = "2.10.0"
 
@@ -63,6 +64,9 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
 
+    //Iconos
+    implementation("androidx.compose.material:material-icons-extended")
+
 
     //Navegacion
     implementation("androidx.navigation:navigation-compose:${nav_version}")
@@ -72,5 +76,6 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:${lifecycle_version}")
+    implementation("io.coil-kt:coil-compose:2.6.0")
 
 }

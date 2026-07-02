@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Le dice a la app que puede guardar fotos temporalmente en la caché -->
+    <cache-path name="fotos_juegos" path="." />
+</paths>

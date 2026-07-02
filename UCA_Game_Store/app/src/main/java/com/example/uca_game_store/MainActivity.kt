@@ -3,45 +3,82 @@ package com.example.uca_game_store
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.uca_game_store.ui.theme.UCA_Game_StoreTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.uca_game_store.ui.screens.HomeScreen
+import com.example.uca_game_store.ui.screens.LoginScreen
+import com.example.uca_game_store.ui.screens.Register
+import com.example.uca_game_store.ui.viewmodels.AuthViewModel
+import com.example.uca_game_store.ui.viewmodels.HomeViewModel
+import com.example.uca_game_store.ui.viewmodels.CarritoViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            UCA_Game_StoreTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+            AppNavigation()
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun AppNavigation() {
+    val navController = rememberNavController()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    UCA_Game_StoreTheme {
-        Greeting("Android")
+    // Inicializamos los ViewModels principales de la app
+    val authViewModel: AuthViewModel = viewModel()
+    val homeViewModel: HomeViewModel = viewModel()
+    val carritoViewModel: CarritoViewModel = viewModel()
+
+    NavHost(navController = navController, startDestination = "login") {
+
+        // 1. Pantalla de Login
+        composable("login") {
+            LoginScreen(
+                navController = navController,
+                viewModel = authViewModel,
+                onLoginSuccess = {
+                    navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onNavigateToRegister = {
+                    navController.navigate("register")
+                }
+            )
+        }
+
+        // 2. Pantalla de Registro
+        composable("register") {
+            Register(
+                viewModel = authViewModel,
+                onRegisterSuccess = {
+                    navController.navigate("login") {
+                        popUpTo("register") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // 3. Pantalla Principal (Contenedor con el Bottom Navigation e Inicio integrado)
+        composable("home") {
+            HomeScreen(
+                viewModel = homeViewModel,
+                authViewModel = authViewModel,
+                carritoViewModel = carritoViewModel,
+                onNavigateToLogin = {
+                    // Al presionar Salir, limpiamos el historial por completo por seguridad
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onGameClick = { gameId ->
+                    // Listo por si a futuro necesitas navegar a una pantalla de detalles extendida
+                }
+            )
+        }
     }
 }
