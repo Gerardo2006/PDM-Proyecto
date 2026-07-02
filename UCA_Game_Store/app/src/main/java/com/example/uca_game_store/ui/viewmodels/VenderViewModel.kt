@@ -13,7 +13,8 @@ data class VenderUiState(
     val precio: String = "",
     val fotoUri: String? = null,
     val destacado: Boolean = false,
-    val isSubmitting: Boolean = false
+    val isSubmitting: Boolean = false,
+    val mostrarDialogoDestacado: Boolean = false
 )
 
 class VenderViewModel : ViewModel() {
@@ -25,28 +26,90 @@ class VenderViewModel : ViewModel() {
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage = _snackbarMessage.asStateFlow()
 
-    fun onTituloChange(it: String) { _uiState.value = _uiState.value.copy(titulo = it) }
-    fun onDescripcionChange(it: String) { _uiState.value = _uiState.value.copy(descripcion = it) }
-    fun onPrecioChange(it: String) { _uiState.value = _uiState.value.copy(precio = it) }
+    // Limites de caracteres
+    private val MAX_TITULO = 70
+    private val MAX_DESCRIPCION = 200
+
+    fun onTituloChange(it: String) {
+        if (it.length <= MAX_TITULO) {
+            _uiState.value = _uiState.value.copy(titulo = it)
+        }
+    }
+
+    fun onDescripcionChange(it: String) {
+        if (it.length <= MAX_DESCRIPCION) {
+            _uiState.value = _uiState.value.copy(descripcion = it)
+        }
+    }
+
+    fun onPrecioChange(it: String) {
+        // Filtrar caracteres no deseados
+        val filtered = it.filter { char -> char.isDigit() || char == '.' }
+        
+        // Validar formato de decimales (máximo 2)
+        if (filtered.contains(".")) {
+            val parts = filtered.split(".")
+            // Solo permitir un punto y máximo 2 decimales
+            if (parts.size <= 2 && parts[1].length <= 2) {
+                // VALIDACIÓN: Límite de mil dólares
+                val valorNum = filtered.toDoubleOrNull() ?: 0.0
+                if (valorNum <= 1000.0) {
+                    _uiState.value = _uiState.value.copy(precio = filtered)
+                }
+            }
+        } else {
+            // VALIDACIÓN: Límite de mil dólares (sin punto decimal)
+            val valorNum = filtered.toDoubleOrNull() ?: 0.0
+            if (valorNum <= 1000.0) {
+                _uiState.value = _uiState.value.copy(precio = filtered)
+            }
+        }
+    }
+
     fun onFotoCapturada(uri: String?) { _uiState.value = _uiState.value.copy(fotoUri = uri) }
-    fun onDestacadoChange(it: Boolean) { _uiState.value = _uiState.value.copy(destacado = it) }
+    
     fun snackbarMostrado() { _snackbarMessage.value = null }
 
-    fun enviarSolicitud() {
+    fun onPublicarClick() {
+        val state = _uiState.value
+        if (state.titulo.isBlank() || state.descripcion.isBlank() || state.precio.isBlank() || state.fotoUri == null) {
+            _snackbarMessage.value = "Por favor completa todos los campos y toma una foto"
+            return
+        }
+        
+        // Abrir el diálogo de confirmación para destacados
+        _uiState.value = state.copy(mostrarDialogoDestacado = true)
+    }
+
+    fun cerrarDialogo() {
+        _uiState.value = _uiState.value.copy(mostrarDialogoDestacado = false)
+    }
+
+    fun enviarSolicitud(esDestacado: Boolean) {
         val currentState = _uiState.value
-        _uiState.value = currentState.copy(isSubmitting = true)
+        _uiState.value = currentState.copy(
+            isSubmitting = true, 
+            mostrarDialogoDestacado = false,
+            destacado = esDestacado
+        )
 
         val nuevaSolicitud = SolicitudVenta(
             nombre = currentState.titulo,
             descripcion = currentState.descripcion,
             precio = currentState.precio,
             fotoUri = currentState.fotoUri ?: "",
-            destacado = currentState.destacado
+            destacado = esDestacado
         )
 
         repository.guardarVenta(nuevaSolicitud) { success ->
-            _uiState.value = currentState.copy(isSubmitting = false)
-            _snackbarMessage.value = if (success) "¡Solicitud enviada!" else "Error al enviar"
+            if (success) {
+                // Limpiar campos si tuvo éxito
+                _uiState.value = VenderUiState()
+                _snackbarMessage.value = "¡Solicitud enviada!"
+            } else {
+                _uiState.value = _uiState.value.copy(isSubmitting = false)
+                _snackbarMessage.value = "Error al enviar la solicitud"
+            }
         }
     }
 }

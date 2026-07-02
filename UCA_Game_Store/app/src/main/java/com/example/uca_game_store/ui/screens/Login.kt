@@ -2,6 +2,9 @@ package com.example.uca_game_store.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -9,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -24,6 +29,7 @@ fun LoginScreen(
 ) {
     var correo by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
+    var contrasenaVisible by remember { mutableStateOf(false) }
     val authState by viewModel.authState.collectAsState()
 
     // Estados para recuperación
@@ -69,7 +75,19 @@ fun LoginScreen(
                         value = contrasena,
                         onValueChange = { contrasena = it },
                         label = { Text("Contraseña") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        visualTransformation = if (contrasenaVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            val imagen = if (contrasenaVisible)
+                                Icons.Filled.Visibility
+                            else Icons.Filled.VisibilityOff
+
+                            val descripcion = if (contrasenaVisible) "Ocultar contraseña" else "Mostrar contraseña"
+
+                            IconButton(onClick = { contrasenaVisible = !contrasenaVisible }) {
+                                Icon(imageVector = imagen, contentDescription = descripcion)
+                            }
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))

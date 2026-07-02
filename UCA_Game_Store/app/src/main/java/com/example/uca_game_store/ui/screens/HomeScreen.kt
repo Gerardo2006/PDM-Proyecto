@@ -8,15 +8,21 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,6 +34,7 @@ import com.example.uca_game_store.navigation.UcaBottomNavigation
 import com.example.uca_game_store.ui.viewmodels.HomeViewModel
 import com.example.uca_game_store.ui.viewmodels.AuthViewModel
 import com.example.uca_game_store.ui.viewmodels.CarritoViewModel
+import com.example.uca_game_store.ui.theme.*
 
 @Composable
 fun HomeScreen(
@@ -49,6 +56,7 @@ fun HomeScreen(
     val isAdmin by viewModel.isAdmin.collectAsState()
     var selectedItem by remember { mutableIntStateOf(0) }
     var juegoSeleccionado by remember { mutableStateOf<SolicitudVenta?>(null) }
+    var mostrarDialogoCerrarSesion by remember { mutableStateOf(false) }
 
     val labels = remember(isAdmin) {
         val list = mutableListOf("Inicio", "WishList", "Vender", "Carrito")
@@ -57,67 +65,115 @@ fun HomeScreen(
         list
     }
 
+    if (mostrarDialogoCerrarSesion) {
+        AlertDialog(
+            onDismissRequest = { mostrarDialogoCerrarSesion = false },
+            title = { Text("Cerrar Sesión") },
+            text = { Text("¿Estás seguro de que quieres salir?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        mostrarDialogoCerrarSesion = false
+                        authViewModel.signOut()
+                        viewModel.resetState()
+                        onNavigateToLogin()
+                    }
+                ) {
+                    Text("SÍ", color = UcaOrange)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { mostrarDialogoCerrarSesion = false }) {
+                    Text("NO", color = Color.Gray)
+                }
+            },
+            containerColor = UcaCardBackground,
+            titleContentColor = Color.White,
+            textContentColor = Color.LightGray
+        )
+    }
+
     Scaffold(
         bottomBar = {
             UcaBottomNavigation(selectedItem, isAdmin) { index ->
                 val clickedLabel = labels.getOrNull(index)
                 if (clickedLabel == "Salir") {
-                    authViewModel.signOut()
-                    viewModel.resetState()
-                    onNavigateToLogin()
+                    mostrarDialogoCerrarSesion = true
                 } else {
                     selectedItem = index
                 }
             }
         },
-        containerColor = Color.Black
+        containerColor = UcaDarkBackground
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            val currentLabel = labels.getOrNull(selectedItem)
-            when (currentLabel) {
-                "Inicio" -> Column {
-                    // Barra de búsqueda integrada
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { viewModel.onSearchQueryChange(it) },
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        placeholder = { Text("Buscar un videojuego...", color = Color.Gray) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar", tint = Color.White) },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFFF8C00),
-                            unfocusedBorderColor = Color.DarkGray,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    HomeContent(games) { juegoSeleccionado = it }
-                }
-                "WishList" -> {
-                    // CORREGIDO: Integración real de los videojuegos guardados en favoritos de solicitudes_venta
-                    val favoritosUsuario by viewModel.juegosFavoritosObjetos.collectAsState()
+        Column(modifier = Modifier.padding(paddingValues)) {
+            // CABECERA CON GRADIENTE (Como en la imagen de referencia)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(UcaGradientStart, UcaGradientMid, UcaGradientEnd)
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "UCA Game Store",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
-                    if (favoritosUsuario.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("No tienes videojuegos en favoritos", color = Color.Gray, fontSize = 16.sp)
-                        }
-                    } else {
-                        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                            Text(
-                                text = "Mis Favoritos",
-                                color = Color.White,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(bottom = 16.dp)
-                            )
-                            // Desplegamos el grid de juegos usando únicamente los favoritos cruzados del usuario
-                            GameCatalog(games = favoritosUsuario) { juegoSeleccionado = it }
+            Box(modifier = Modifier.fillMaxSize()) {
+                val currentLabel = labels.getOrNull(selectedItem)
+                when (currentLabel) {
+                    "Inicio" -> Column {
+                        // Barra de búsqueda con estilo actualizado
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { viewModel.onSearchQueryChange(it) },
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            placeholder = { Text("Buscar un videojuego...", color = Color.Gray) },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar", tint = Color.White) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = UcaOrange,
+                                unfocusedBorderColor = Color.DarkGray,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedContainerColor = UcaCardBackground,
+                                unfocusedContainerColor = UcaCardBackground
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        HomeContent(games) { juegoSeleccionado = it }
+                    }
+                    "WishList" -> {
+                        val favoritosUsuario by viewModel.juegosFavoritosObjetos.collectAsState()
+
+                        if (favoritosUsuario.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text("No tienes videojuegos en favoritos", color = Color.Gray, fontSize = 16.sp)
+                            }
+                        } else {
+                            Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                                Text(
+                                    text = "Mis Favoritos",
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+                                GameCatalog(games = favoritosUsuario) { juegoSeleccionado = it }
+                            }
                         }
                     }
+                    "Vender" -> VenderScreen()
+                    "Carrito" -> CarritoScreen(carritoViewModel)
+                    "Admin" -> AdminAprobacionesScreen()
                 }
-                "Vender" -> VenderScreen()
-                "Carrito" -> CarritoScreen(carritoViewModel)
-                "Admin" -> AdminAprobacionesScreen()
             }
         }
     }
@@ -127,7 +183,6 @@ fun HomeScreen(
             game = juegoSeleccionado!!,
             onDismiss = { juegoSeleccionado = null },
             onComprarClick = {
-                // CORREGIDO: Sanitización profunda de strings de precio para evitar fallos de parseo numérico
                 val precioFormateado = juegoSeleccionado!!.precio
                     .replace("$", "")
                     .replace(" ", "")
@@ -151,10 +206,14 @@ fun DetailAndActionBottomSheet(
     game: SolicitudVenta,
     onDismiss: () -> Unit,
     onComprarClick: () -> Unit,
-    viewModel: HomeViewModel = viewModel()
+    viewModel: HomeViewModel = viewModel(),
+    isAdminMode: Boolean = false,
+    onAprobar: (() -> Unit)? = null,
+    onRechazar: (() -> Unit)? = null
 ) {
     var rating by remember { mutableIntStateOf(0) }
     var reviewText by remember { mutableStateOf("") }
+    var mostrarImagenAgrandada by remember { mutableStateOf(false) }
 
     val listaReseñas by viewModel.reseñasJuegoSeleccionado.collectAsState()
     val favoritosIds by viewModel.favoritosIds.collectAsState()
@@ -164,14 +223,61 @@ fun DetailAndActionBottomSheet(
         viewModel.cargarReseñasDelJuego(game.id)
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF1E1E24)) {
+    if (mostrarImagenAgrandada) {
+        androidx.compose.ui.window.Dialog(
+            onDismissRequest = { mostrarImagenAgrandada = false },
+            properties = androidx.compose.ui.window.DialogProperties(
+                usePlatformDefaultWidth = false
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+            ) {
+                AsyncImage(
+                    model = game.fotoUri,
+                    contentDescription = "Imagen agrandada",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .align(Alignment.Center),
+                    contentScale = ContentScale.Fit
+                )
+                IconButton(
+                    onClick = { mostrarImagenAgrandada = false },
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .align(Alignment.TopEnd)
+                        .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(50))
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.White)
+                }
+            }
+        }
+    }
+
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = UcaCardBackground) {
         Column(
             modifier = Modifier
                 .padding(24.dp)
                 .fillMaxWidth()
                 .navigationBarsPadding()
+                .verticalScroll(rememberScrollState())
         ) {
-            // Fila Superior: Información del juego + Control de Favoritos
+            if (game.fotoUri.isNotEmpty()) {
+                AsyncImage(
+                    model = game.fotoUri,
+                    contentDescription = game.nombre,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable { mostrarImagenAgrandada = true },
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -179,18 +285,20 @@ fun DetailAndActionBottomSheet(
             ) {
                 Text(
                     text = game.nombre,
-                    color = Color(0xFFFF8C00),
+                    color = UcaOrange,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
-                IconButton(onClick = { viewModel.toggleFavorito(game.id) }) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "WishList",
-                        tint = if (esFavorito) Color(0xFFFFD700) else Color.Gray,
-                        modifier = Modifier.size(28.dp)
-                    )
+                if (!isAdminMode) {
+                    IconButton(onClick = { viewModel.toggleFavorito(game.id) }) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "WishList",
+                            tint = if (esFavorito) Color(0xFFFFD700) else Color.Gray,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
             }
 
@@ -198,64 +306,93 @@ fun DetailAndActionBottomSheet(
             Text(game.descripcion, color = Color.White, fontSize = 15.sp)
             Spacer(modifier = Modifier.height(12.dp))
 
-            Button(onClick = onComprarClick, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676))) {
-                Text("Añadir al carrito - $${game.precio}", fontWeight = FontWeight.Bold, color = Color.Black)
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = Color.DarkGray)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // SECCIÓN: AÑADIR NUEVA RESEÑA A FIRESTORE
-            Text("Calificar este juego:", color = Color.LightGray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(vertical = 4.dp)) {
-                for (i in 1..5) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Estrella $i",
-                        tint = if (i <= rating) Color(0xFFFFD700) else Color.Gray,
-                        modifier = Modifier.size(26.dp).clickable { rating = i }
-                    )
+            if (!isAdminMode) {
+                Button(
+                    onClick = onComprarClick,
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = UcaGreen),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Añadir al carrito - $${game.precio}", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = { onRechazar?.invoke(); onDismiss() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Rechazar", fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = { onAprobar?.invoke(); onDismiss() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = UcaGreen),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Aprobar", fontWeight = FontWeight.Bold, color = Color.White)
+                    }
                 }
             }
 
-            OutlinedTextField(
-                value = reviewText,
-                onValueChange = { reviewText = it },
-                modifier = Modifier.fillMaxWidth().height(70.dp),
-                placeholder = { Text("Escribe una reseña o comentario...", color = Color.Gray, fontSize = 13.sp) },
-                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White),
-                shape = RoundedCornerShape(8.dp)
-            )
+            if (!isAdminMode) {
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = Color.DarkGray)
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    viewModel.enviarReseña(game.id, rating, reviewText) {
-                        rating = 0
-                        reviewText = ""
+                Text("Calificar este juego:", color = Color.LightGray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(vertical = 4.dp)) {
+                    for (i in 1..5) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Estrella $i",
+                            tint = if (i <= rating) Color(0xFFFFD700) else Color.Gray,
+                            modifier = Modifier.size(26.dp).clickable { rating = i }
+                        )
                     }
-                },
-                modifier = Modifier.align(Alignment.End),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF8C00))
-            ) {
-                Text("Publicar Reseña", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-            }
+                }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Opiniones de la comunidad:", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = reviewText,
+                    onValueChange = { reviewText = it },
+                    modifier = Modifier.fillMaxWidth().height(70.dp),
+                    placeholder = { Text("Escribe una reseña o comentario...", color = Color.Gray, fontSize = 13.sp) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = UcaOrange
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                )
 
-            // SECCIÓN: LISTADO DE OPINIONES DE LA COMUNIDAD EN VIVO
-            Box(modifier = Modifier.weight(1f, fill = false).heightIn(max = 200.dp)) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        viewModel.enviarReseña(game.id, rating, reviewText) {
+                            rating = 0
+                            reviewText = ""
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.End),
+                    colors = ButtonDefaults.buttonColors(containerColor = UcaOrange)
+                ) {
+                    Text("Publicar Reseña", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Opiniones de la comunidad:", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+
                 if (listaReseñas.isEmpty()) {
                     Text("Nadie ha reseñado este juego aún. ¡Sé el primero!", color = Color.Gray, fontSize = 13.sp, modifier = Modifier.padding(vertical = 8.dp))
                 } else {
-                    androidx.compose.foundation.lazy.LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(listaReseñas) { res ->
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        listaReseñas.forEach { res ->
                             val autor = res["usuario"] as? String ?: "Anónimo"
                             val estrellas = (res["calificacion"] as? Long)?.toInt() ?: 0
                             val comentario = res["comentario"] as? String ?: ""
@@ -271,7 +408,7 @@ fun DetailAndActionBottomSheet(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(autor, color = Color(0xFFFF8C00), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text(autor, color = UcaOrange, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     Row {
                                         for (i in 1..5) {
                                             Icon(
@@ -310,7 +447,7 @@ fun HomeContent(games: List<SolicitudVenta>, onGameClick: (SolicitudVenta) -> Un
                     color = Color.White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(vertical = 12.dp)
                 )
                 FeaturedCarousel(featuredGames, onGameClick)
                 Spacer(modifier = Modifier.height(16.dp))
@@ -321,7 +458,7 @@ fun HomeContent(games: List<SolicitudVenta>, onGameClick: (SolicitudVenta) -> Un
                 color = Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 12.dp)
             )
             GameCatalog(games, onGameClick)
         }
@@ -330,16 +467,77 @@ fun HomeContent(games: List<SolicitudVenta>, onGameClick: (SolicitudVenta) -> Un
 
 @Composable
 fun FeaturedCarousel(games: List<SolicitudVenta>, onGameClick: (SolicitudVenta) -> Unit) {
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(bottom = 8.dp)
+    ) {
         items(games, key = { it.id }) { game ->
             Card(
-                modifier = Modifier.width(300.dp).height(160.dp).clickable { onGameClick(game) },
-                shape = RoundedCornerShape(16.dp)
+                modifier = Modifier
+                    .width(300.dp)
+                    .height(180.dp)
+                    .clickable { onGameClick(game) },
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                if (game.fotoUri.isNotEmpty()) {
-                    AsyncImage(model = game.fotoUri, contentDescription = game.nombre, modifier = Modifier.fillMaxSize())
-                } else {
-                    Box(modifier = Modifier.fillMaxSize().background(Color.DarkGray))
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // Imagen con menos zoom (usando Crop pero con un Box mejor definido)
+                    if (game.fotoUri.isNotEmpty()) {
+                        AsyncImage(
+                            model = game.fotoUri,
+                            contentDescription = game.nombre,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(modifier = Modifier.fillMaxSize().background(Color.DarkGray))
+                    }
+
+                    // Overlay de gradiente para legibilidad del texto
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)),
+                                    startY = 100f
+                                )
+                            )
+                    )
+
+                    // Información creativa: Nombre y Precio
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(16.dp)
+                    ) {
+                        Surface(
+                            color = UcaOrange,
+                            shape = RoundedCornerShape(4.dp),
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        ) {
+                            Text(
+                                text = "DESTACADO",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                        Text(
+                            text = game.nombre,
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = "$${game.precio}",
+                            color = UcaGreen,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -365,16 +563,43 @@ fun GameCard(game: SolicitudVenta, onGameClick: (SolicitudVenta) -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onGameClick(game) },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E24))
+        colors = CardDefaults.cardColors(containerColor = UcaCardBackground)
     ) {
         Column {
             if (game.fotoUri.isNotEmpty()) {
-                AsyncImage(model = game.fotoUri, contentDescription = game.nombre, modifier = Modifier.fillMaxWidth().height(120.dp))
+                AsyncImage(
+                    model = game.fotoUri,
+                    contentDescription = game.nombre,
+                    modifier = Modifier.fillMaxWidth().height(150.dp),
+                    contentScale = ContentScale.Crop
+                )
             } else {
-                Box(modifier = Modifier.fillMaxWidth().height(120.dp).background(Color.DarkGray))
+                Box(modifier = Modifier.fillMaxWidth().height(150.dp).background(Color.DarkGray))
             }
-            Text(game.nombre, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
-            Text("$${game.precio}", color = Color(0xFF00E676), fontWeight = FontWeight.Medium, modifier = Modifier.padding(start = 8.dp, bottom = 8.dp))
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(
+                    text = game.nombre,
+                    color = UcaOrange,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = game.descripcion,
+                    color = Color.LightGray,
+                    fontSize = 12.sp,
+                    maxLines = 2,
+                    lineHeight = 16.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "$${game.precio}",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+            }
         }
     }
 }

@@ -59,6 +59,9 @@ fun AppNavigation() {
                     navController.navigate("login") {
                         popUpTo("register") { inclusive = true }
                     }
+                },
+                onNavigateToLogin = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -75,7 +78,7 @@ fun AppNavigation() {
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onGameClick = { gameId ->
+                onGameClick = { _ ->
                     // Listo por si a futuro necesitas navegar a una pantalla de detalles extendida
                 }
             )
