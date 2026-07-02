@@ -51,10 +51,18 @@ class VenderViewModel : ViewModel() {
             val parts = filtered.split(".")
             // Solo permitir un punto y máximo 2 decimales
             if (parts.size <= 2 && parts[1].length <= 2) {
-                _uiState.value = _uiState.value.copy(precio = filtered)
+                // VALIDACIÓN: Límite de mil dólares
+                val valorNum = filtered.toDoubleOrNull() ?: 0.0
+                if (valorNum <= 1000.0) {
+                    _uiState.value = _uiState.value.copy(precio = filtered)
+                }
             }
         } else {
-            _uiState.value = _uiState.value.copy(precio = filtered)
+            // VALIDACIÓN: Límite de mil dólares (sin punto decimal)
+            val valorNum = filtered.toDoubleOrNull() ?: 0.0
+            if (valorNum <= 1000.0) {
+                _uiState.value = _uiState.value.copy(precio = filtered)
+            }
         }
     }
 
