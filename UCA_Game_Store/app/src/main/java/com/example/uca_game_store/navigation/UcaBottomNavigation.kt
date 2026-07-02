@@ -1,7 +1,8 @@
-package com.example.uca_game_store.ui.screens
+package com.example.uca_game_store.navigation
 
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -11,7 +12,7 @@ import com.example.uca_game_store.ui.theme.UcaOrange
 @Composable
 fun UcaBottomNavigation(selectedItem: Int, isAdmin: Boolean, onItemSelected: (Int) -> Unit) {
     // Definimos las listas dinámicamente
-    val labels = mutableListOf("Inicio", "Favorito", "Vender", "Carrito")
+    val labels = mutableListOf("Inicio", "WishList", "Vender", "Carrito")
     val icons = mutableListOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.AddCircle, Icons.Default.ShoppingCart)
 
     if (isAdmin) {
@@ -21,7 +22,7 @@ fun UcaBottomNavigation(selectedItem: Int, isAdmin: Boolean, onItemSelected: (In
 
     // Añadimos el botón de salir siempre al final
     labels.add("Salir")
-    icons.add(Icons.Default.Person)
+    icons.add(Icons.AutoMirrored.Filled.ExitToApp)
 
     NavigationBar(containerColor = UcaCardBackground) {
         labels.forEachIndexed { index, label ->

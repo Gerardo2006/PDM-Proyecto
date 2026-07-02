@@ -7,11 +7,6 @@ data class SolicitudVenta(
     val precio: String = "",
     val fotoUri: String = "",
     val vendedorId: String = "",
-    val estado: String = "PENDIENTE"
+    val estado: String = "PENDIENTE",
+    val destacado: Boolean = false
 )
-/*data class SolicitudVenta(
-    val id: Int,
-    val nombre: String,
-    val descripcion: String = "", // Valor por defecto
-    val fotoUri: String = ""      // Valor por defecto
-)*/
